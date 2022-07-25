@@ -1,3 +1,5 @@
+use chip8::rom::ROM;
+
 fn main() {
-    println!("Hello, world!");
+    let rom = ROM::from_file("./data/IBM Logo.ch8").expect("Error opening ROM");
 }
