@@ -1,4 +1,3 @@
-use std::io;
 use crate::mmu::MMU;
 
 pub struct CPU {
@@ -33,7 +32,7 @@ impl CPU {
 
         match instruction {
             0x0 => {
-                self.handle_ins_0(opcode, nn);
+                self.handle_ins_0(opcode, nn, mmu);
             }
             0x1 => {
                 self.handle_ins_1(nnn);
@@ -56,10 +55,10 @@ impl CPU {
         }
     }
 
-    fn handle_ins_0(&mut self, opcode: u16, nn: u8) {
+    fn handle_ins_0(&mut self, opcode: u16, nn: u8, mmu: &mut MMU) {
         match nn {
             0xE0 => {
-                // Clear the framebuffer
+                mmu.fb_clear();
             }
             0xEE => {
                 self.pc = self.stack[self.sp as usize];

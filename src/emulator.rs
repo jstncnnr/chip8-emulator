@@ -1,5 +1,4 @@
 use crate::cpu::CPU;
-use crate::framebuffer::Framebuffer;
 use crate::mmu::MMU;
 use crate::rom::ROM;
 

@@ -67,4 +67,8 @@ impl MMU {
     pub fn fb_needs_refresh(&self) -> bool {
         return self.framebuffer.needs_refresh;
     }
+
+    pub fn fb_clear(&mut self) {
+        self.framebuffer.clear();
+    }
 }
