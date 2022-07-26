@@ -17,7 +17,7 @@ impl Framebuffer {
     }
 
     pub fn clear(&mut self) {
-        self.data.clear();
+        self.data.fill(0);
         self.needs_refresh = true;
     }
 

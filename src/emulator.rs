@@ -31,7 +31,7 @@ impl<'a> Emulator<'a> {
     }
 
     pub fn cycle(&mut self) {
-        while self.running {
+        if self.running {
             self.cpu.cycle(&mut self.mmu);
         }
     }
