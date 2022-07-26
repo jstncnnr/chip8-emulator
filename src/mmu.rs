@@ -1,16 +1,19 @@
 use std::io;
 use std::io::{Error, ErrorKind};
+use crate::framebuffer::Framebuffer;
 
 pub struct MMU {
     memory: Vec<u8>,
-    max_size: usize
+    max_size: usize,
+    framebuffer: Framebuffer
 }
 
 impl MMU {
     pub fn new(max_size: usize) -> Self {
         Self {
             memory: vec![0; max_size],
-            max_size
+            max_size,
+            framebuffer: Framebuffer::new(64, 32)
         }
     }
 
@@ -47,5 +50,21 @@ impl MMU {
 
         let short = (self.read(address)? as u16) << 8 | self.read(address + 1)? as u16;
         Ok(short)
+    }
+
+    pub fn fb_get(&self, x: usize, y: usize) -> u8 {
+        return self.framebuffer.get(x, y);
+    }
+
+    pub fn fb_set(&mut self, x: usize, y: usize, val: u8) {
+        self.framebuffer.set(x, y, val);
+    }
+
+    pub fn fb_get_data(&self) -> Vec<u8> {
+        return self.framebuffer.get_data();
+    }
+
+    pub fn fb_needs_refresh(&self) -> bool {
+        return self.framebuffer.needs_refresh;
     }
 }

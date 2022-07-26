@@ -5,3 +5,4 @@ pub mod emulator;
 
 mod mmu;
 mod cpu;
+mod framebuffer;
