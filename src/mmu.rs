@@ -39,4 +39,13 @@ impl MMU {
 
         Ok(self.memory[address])
     }
+
+    pub fn read_short(&self, address: usize) -> io::Result<u16> {
+        if address + 1 >= self.max_size {
+            return Err(Error::new(ErrorKind::Other, "Index out of bounds"));
+        }
+
+        let short = (self.read(address)? as u16) << 8 | self.read(address + 1)? as u16;
+        Ok(short)
+    }
 }
