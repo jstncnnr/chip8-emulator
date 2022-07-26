@@ -1,9 +1,11 @@
+use crate::cpu::CPU;
 use crate::mmu::MMU;
 use crate::rom::ROM;
 
 pub struct Emulator<'a> {
     rom: &'a ROM,
     mmu: MMU,
+    cpu: CPU,
     running: bool
 }
 
@@ -12,6 +14,7 @@ impl<'a> Emulator<'a> {
         let mut _emulator = Self {
             rom,
             mmu: MMU::new(4096),
+            cpu: CPU::new(0x200),
             running: false
         };
 
@@ -28,7 +31,9 @@ impl<'a> Emulator<'a> {
     }
 
     pub fn cycle(&mut self) {
-
+        while self.running {
+            self.cpu.cycle(&mut self.mmu);
+        }
     }
 
     fn load_rom_into_memory(&mut self) {

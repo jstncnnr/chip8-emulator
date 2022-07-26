@@ -4,3 +4,4 @@ pub mod rom;
 pub mod emulator;
 
 mod mmu;
+mod cpu;
