@@ -7,7 +7,7 @@ use chip8::emulator::Emulator;
 use chip8::rom::ROM;
 
 fn main() {
-    let rom = ROM::from_file("./data/IBM Logo.ch8").expect("Error opening ROM");
+    let rom = ROM::from_file("./data/test_opcode.ch8").expect("Error opening ROM");
     let mut emulator = Emulator::new(&rom);
 
     let scale: i32 = 5;
@@ -28,15 +28,17 @@ fn main() {
     'running: loop {
         emulator.cycle();
 
-        canvas.set_draw_color(Color::RGB(0, 0, 0));
-        canvas.clear();
+        if emulator.fb_needs_refresh() {
+            canvas.set_draw_color(Color::RGB(0, 0, 0));
+            canvas.clear();
 
-        let fb_data = emulator.get_fb_data();
-        canvas.set_draw_color(Color::RGB(255, 255, 255));
-        for y in 0..32 {
-            for x in 0..64 {
-                if fb_data[y * 64 + x] == 1 {
-                    canvas.fill_rect(Rect::new((x as i32)* scale, (y as i32) * scale, scale as u32, scale as u32)).unwrap();
+            let fb_data = emulator.get_fb_data();
+            canvas.set_draw_color(Color::RGB(255, 255, 255));
+            for y in 0..32 {
+                for x in 0..64 {
+                    if fb_data[y * 64 + x] == 1 {
+                        canvas.fill_rect(Rect::new((x as i32) * scale, (y as i32) * scale, scale as u32, scale as u32)).unwrap();
+                    }
                 }
             }
         }

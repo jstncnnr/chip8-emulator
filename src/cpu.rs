@@ -37,17 +37,38 @@ impl CPU {
             0x1 => {
                 self.handle_ins_1(nnn);
             }
+            0x2 => {
+                self.handle_ins_2(nnn);
+            }
+            0x3 => {
+                self.handle_ins_3(v_x, nn);
+            }
+            0x4 => {
+                self.handle_ins_4(v_x, nn);
+            }
+            0x5 => {
+                self.handle_ins_5(v_x, v_y);
+            }
             0x6 => {
                 self.handle_ins_6(v_x, nn);
             }
             0x7 => {
                 self.handle_ins_7(v_x, nn);
             }
+            0x8 => {
+                self.handle_ins_8(v_x, v_y, n);
+            }
+            0x9 => {
+                self.handle_ins_9(v_x, v_y);
+            }
             0xA => {
                 self.handle_ins_a(nnn);
             }
             0xD => {
                 self.handle_ins_d(n, v_x, v_y, mmu);
+            }
+            0xF => {
+                self.handle_ins_f(v_x, nn, mmu);
             }
             _ => {
                 panic!("Unhandled instruction type: {:X}", instruction);
@@ -61,8 +82,8 @@ impl CPU {
                 mmu.fb_clear();
             }
             0xEE => {
-                self.pc = self.stack[self.sp as usize];
                 self.sp -= 1;
+                self.pc = self.stack[self.sp as usize];
             }
             _ => { panic!("Unexpected opcode: {:X}", opcode) }
         }
@@ -72,12 +93,84 @@ impl CPU {
         self.pc = nnn;
     }
 
+    fn handle_ins_2(&mut self, nnn: u16) {
+        self.stack[self.sp as usize] = self.pc;
+        self.sp += 1;
+        self.pc = nnn;
+    }
+
+    fn handle_ins_3(&mut self, v_x: u16, nn: u8) {
+        if self.registers[v_x as usize] == nn {
+            self.pc += 2;
+        }
+    }
+
+    fn handle_ins_4(&mut self, v_x: u16, nn: u8) {
+        if self.registers[v_x as usize] != nn {
+            self.pc += 2;
+        }
+    }
+
+    fn handle_ins_5(&mut self, v_x: u16, v_y: u16) {
+        if self.registers[v_x as usize] == self.registers[v_y as usize] {
+            self.pc += 2;
+        }
+    }
+
     fn handle_ins_6(&mut self, v_x: u16, nn: u8) {
         self.registers[v_x as usize] = nn;
     }
 
     fn handle_ins_7(&mut self, v_x: u16, nn: u8) {
-        self.registers[v_x as usize] += nn;
+        self.registers[v_x as usize] = self.registers[v_x as usize].wrapping_add(nn);
+    }
+
+    fn handle_ins_8(&mut self, v_x: u16, v_y: u16, n: u8) {
+        let v_x = v_x as usize;
+        let v_y = v_y as usize;
+
+        match n {
+            0x0 => {
+                self.registers[v_x] = self.registers[v_y];
+            }
+            0x1 => {
+                self.registers[v_x] |= self.registers[v_y];
+            }
+            0x2 => {
+                self.registers[v_x] &= self.registers[v_y];
+            }
+            0x3 => {
+                self.registers[v_x] ^= self.registers[v_y];
+            }
+            0x4 => {
+                let (result, overflow) = self.registers[v_x].overflowing_add(self.registers[v_y]);
+                self.registers[v_x] = result;
+                self.registers[0xF] = overflow as u8;
+            }
+            0x6 => {
+                self.registers[0xF] = self.registers[v_x] & 1;
+                self.registers[v_x] >>= 1;
+            }
+            0x5 => {
+                self.registers[0xF] = if self.registers[v_x] > self.registers[v_y] { 1 } else { 0 };
+                self.registers[v_x] = self.registers[v_x].wrapping_sub(self.registers[v_y]);
+            }
+            0x7 => {
+                self.registers[0xF] = if self.registers[v_y] > self.registers[v_x] { 1 } else { 0 };
+                self.registers[v_x] = self.registers[v_y].wrapping_sub(self.registers[v_x]);
+            }
+            0xE => {
+                self.registers[0xF] = (self.registers[v_x] & 0xFF) >> 7;
+                self.registers[v_x] <<= 1;
+            }
+            _ => { panic!("Unexpected operation 8XY{:X}", n) }
+        }
+    }
+
+    fn handle_ins_9(&mut self, v_x: u16, v_y: u16) {
+        if self.registers[v_x as usize] != self.registers[v_y as usize] {
+            self.pc += 2;
+        }
     }
 
     fn handle_ins_a(&mut self, nnn: u16) {
@@ -101,6 +194,27 @@ impl CPU {
                 self.registers[0xF] |= color & current;
                 mmu.fb_set(x as usize, y as usize, current ^ color);
             }
+        }
+    }
+
+    fn handle_ins_f(&mut self, v_x: u16, nn: u8, mmu: &mut MMU) {
+        let v_x = v_x as usize;
+        match nn {
+            0x33 => {
+                mmu.write(self.i as usize, self.registers[v_x] / 100).expect("Unable to write to memory");
+                mmu.write((self.i + 1) as usize, (self.registers[v_x] % 100) / 10).expect("Unable to write to memory");
+                mmu.write((self.i + 2) as usize, self.registers[v_x] % 10).expect("Unable to write to memory");
+            }
+            0x55 => {
+                mmu.write_to_mem(self.registers[0..(v_x + 1)].to_vec(), self.i as usize)
+                    .expect("Unable to write to memory");
+            }
+            0x65 => {
+                for i in 0..v_x + 1 {
+                    self.registers[i] = mmu.read((self.i as usize) + i).expect("Unable to read memory");
+                }
+            }
+            _ => { panic!("Unexpected opcode FX{:X}", nn) }
         }
     }
 }

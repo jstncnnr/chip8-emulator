@@ -35,6 +35,15 @@ impl MMU {
         Ok(bytes_written)
     }
 
+    pub fn write(&mut self, address: usize, value: u8) -> io::Result<u8> {
+        if address >= self.max_size {
+            return Err(Error::new(ErrorKind::Other, "Index out of bounds"));
+        }
+
+        self.memory[address] = value;
+        Ok(1)
+    }
+
     pub fn read(&self, address: usize) -> io::Result<u8> {
         if address >= self.max_size {
             return Err(Error::new(ErrorKind::Other, "Index out of bounds"));
@@ -50,6 +59,14 @@ impl MMU {
 
         let short = (self.read(address)? as u16) << 8 | self.read(address + 1)? as u16;
         Ok(short)
+    }
+
+    pub fn read_from_mem(&self, address: usize, length: usize) -> io::Result<Vec<u8>> {
+        if address + length >= self.max_size {
+            return Err(Error::new(ErrorKind::Other, "Index out of bounds"));
+        }
+
+        Ok(self.memory[address..length].to_vec())
     }
 
     pub fn fb_get(&self, x: usize, y: usize) -> u8 {
