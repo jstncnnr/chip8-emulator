@@ -61,14 +61,6 @@ impl MMU {
         Ok(short)
     }
 
-    pub fn read_from_mem(&self, address: usize, length: usize) -> io::Result<Vec<u8>> {
-        if address + length >= self.max_size {
-            return Err(Error::new(ErrorKind::Other, "Index out of bounds"));
-        }
-
-        Ok(self.memory[address..length].to_vec())
-    }
-
     pub fn fb_get(&self, x: usize, y: usize) -> u8 {
         return self.framebuffer.get(x, y);
     }
