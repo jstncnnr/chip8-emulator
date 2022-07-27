@@ -200,6 +200,25 @@ impl CPU {
     fn handle_ins_f(&mut self, v_x: u16, nn: u8, mmu: &mut MMU) {
         let v_x = v_x as usize;
         match nn {
+            0x07 => {
+                //self.registers[v_x] = delay_timer;
+            }
+            0x0A => {
+                //wait for keypress, store in v_x
+            }
+            0x15 => {
+                //delay_timer = v_x;
+            }
+            0x18 => {
+                //sound_timer = v_x;
+            }
+            0x1E => {
+                self.i += v_x as u16;
+                self.registers[0xF] = if self.i > 0x0F00 { 1 } else { 0 };
+            }
+            0x29 => {
+                self.i = (v_x * 5) as u16;
+            }
             0x33 => {
                 mmu.write(self.i as usize, self.registers[v_x] / 100).expect("Unable to write to memory");
                 mmu.write((self.i + 1) as usize, (self.registers[v_x] % 100) / 10).expect("Unable to write to memory");
